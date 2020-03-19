@@ -3,7 +3,6 @@ import re
 #test = "5x = 8"
 #test = "x + 3x = 4 + 4"
 
-#creates two lists for each side of the equation containing all the terms and operands
 def createList(splitPart):
     for term in splitPart:
         if term == "":
@@ -13,8 +12,10 @@ def createList(splitPart):
         if splitPart[i] == "x":
             splitPart[i] = "1x"    
 
-    #if the first term is not preceded by a minus it is automatically a positive term
-    newList = [[splitPart[0], "+"]]
+    #if the first term is not already preceded by a plus or minus it is automatically a positive term
+    newList = []
+    if not splitPart[0] in ["+","-"]:
+        newList = [[splitPart[0], "+"]]
 
     #adds each term to newList and appends the operator preceding the term
     count = 0
@@ -24,8 +25,6 @@ def createList(splitPart):
         count += 1
     return newList
 
-#Create four lists that seperate the terms into positive terms containing x, negative terms containing x, 
-#positive integer terms, and negative integer terms
 def populateLists(termSide):
     pList = []
     mList = []
@@ -37,6 +36,7 @@ def populateLists(termSide):
                 pList.append(term[0])
             elif term[1] == "-":
                 mList.append(term[0])
+
         elif term[1] == "+":
             pNumList.append(term[0])
         elif term[1] == "-":
@@ -45,51 +45,84 @@ def populateLists(termSide):
 
 def calcTotalX(terms, operator):
     total = 0
+    print(terms)
     for term in terms:
         if term.find("x") > -1:
             xterm = term.replace("x", "")
             if operator == "+":
                 total += int(xterm)
-            else:
+            elif operator == "-":
                 total -= int(xterm)
         elif operator == "+":
             total += int(term)
-        else:
+        elif operator == "-":
             total -= int(term)
+    print(total)
     return total
 
-#This is made into a function simply so that one can rerun the program from the shell by calling this function.
-def findx():
-    expression = input("Enter an equation:")
-    pattern = '[0-9]*x[0-9]*'
-    numPat = '[0-9]+'
-    total = 0
+def calcMultiply(toMultiply):
+    multiList = []
+    hasX = False
+    if toMultiply.find("x") > -1:
+        hasX = True
+        toMultiply = toMultiply.replace("x", "")
+    multiTerms = toMultiply.split(" ")
+    if not multiTerms[multiTerms.index('*') + 1] in ['+','-']:
+        multiTerms.insert((multiTerms.index('*')) + 1, '+')
+    multiTerms.remove("*")
+    multiList = createList(multiTerms)
+    negatives = 0
+    total = 1
+    for term in multiList:
+        total *= int(term[0])
+        if term[1] == "-":
+            negatives += 1
+    if negatives%2 == 1:
+        total = "- " + str(total)
+    else:
+        total = "+ " + str(total)
+    if hasX:
+        total = str(total) + "x"
+    return total
 
-    p1split = expression.split("=")[0].split(" ")
-    p2split = expression.split("=")[1].split(" ")
+#expression = input("Enter an equation:")
+expression = '4x + 2x - 5x * 7 + 3 * - 2x = 8'
+#expression = '4x + 2x + 5x * 7 + 3 * - 2 = 8'
+pattern = '[0-9]*x[0-9]*'
+numPat = '[0-9]+'
+total = 0
 
-    leftTerms = createList(p1split)
-    rightTerms = createList(p2split)    
+multiplies = re.findall('[+-] [0-9a-z]+ \* [-]?[ ]?[0-9a-z]+', " ".join(expression.split("=")[0].split(" ")))
 
-    seperatedLeft = populateLists(leftTerms)
-    seperatedRight = populateLists(rightTerms)
+for i in range(len(multiplies)):
+    replacement = calcMultiply(multiplies[i])
+    expression = expression.replace(multiplies[i], replacement)
 
-    leftXPosi = calcTotalX(seperatedLeft[0], "+")
-    rightXPosi = calcTotalX(seperatedRight[0], "+")
-    leftXNeg = calcTotalX(seperatedLeft[1], "-")
-    rightXNeg = calcTotalX(seperatedRight[1], "-")
+print(expression)
 
-    totalXL = (leftXPosi - rightXPosi) + (leftXNeg - rightXNeg)
+p1split = expression.split("=")[0].split(" ")
+p2split = expression.split("=")[1].split(" ")
 
-    leftNumPosi = calcTotalX(seperatedLeft[2], "+")
-    rightNumPosi = calcTotalX(seperatedRight[2], "+")
-    leftNumNeg = calcTotalX(seperatedLeft[3], "-")
-    rightNumNeg = calcTotalX(seperatedRight[3], "-")
+leftTerms = createList(p1split)
+rightTerms = createList(p2split)    
 
-    totalNumR = (rightNumPosi - leftNumPosi) + (rightNumNeg - leftNumNeg)
+seperatedLeft = populateLists(leftTerms)
+seperatedRight = populateLists(rightTerms)
 
-    xVal = totalNumR/totalXL
+leftXPosi = calcTotalX(seperatedLeft[0], "+")
+leftXNeg = calcTotalX(seperatedLeft[1], "-")
+rightXPosi = calcTotalX(seperatedRight[0], "+")
+rightXNeg = calcTotalX(seperatedRight[1], "-")
 
-    print("x = ", str(xVal))
+totalXL = (leftXPosi - rightXPosi) + (leftXNeg - rightXNeg)
 
-findx()
+leftNumPosi = calcTotalX(seperatedLeft[2], "+")
+rightNumPosi = calcTotalX(seperatedRight[2], "+")
+leftNumNeg = calcTotalX(seperatedLeft[3], "-")
+rightNumNeg = calcTotalX(seperatedRight[3], "-")
+
+totalNumR = (rightNumPosi - leftNumPosi) + (rightNumNeg - leftNumNeg)
+
+xVal = totalNumR/totalXL
+
+print("x = ", str(xVal))
