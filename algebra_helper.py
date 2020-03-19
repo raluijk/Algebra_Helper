@@ -3,6 +3,7 @@ import re
 #test = "5x = 8"
 #test = "x + 3x = 4 + 4"
 
+#creates two lists for each side of the equation containing all the terms and operands
 def createList(splitPart):
     for i in range(len(splitPart) - 1):
         if splitPart[i] == "x":
@@ -11,9 +12,11 @@ def createList(splitPart):
     for term in splitPart:
         if term == "":
             splitPart.remove(term)
-
+    
+    #if the first term is not preceded by a minus it is automatically a positive term
     newList = [[splitPart[0], "+"]]
-
+    
+    #adds each term to newList and appends the operator preceding the term
     count = 0
     for term in splitPart:
         if count > 0 and not term in ["+","-"]:
@@ -21,6 +24,8 @@ def createList(splitPart):
         count += 1
     return newList
 
+#Create four lists that seperate the terms into positive terms containing x, negative terms containing x, 
+#positive integer terms, and negative integer terms
 def populateLists(termSide):
     pList = []
     mList = []
@@ -38,21 +43,22 @@ def populateLists(termSide):
             mNumList.append(term[0])
     return pList, mList, pNumList, mNumList
 
-def calcTotalX(terms, operand):
+def calcTotalX(terms, operator):
     total = 0
     for term in terms:
         if term.find("x") > -1:
             xterm = term.replace("x", "")
-            if operand == "+":
+            if operator == "+":
                 total += int(xterm)
             else:
                 total -= int(xterm)
-        elif operand == "+":
+        elif operator == "+":
             total += int(term)
         else:
             total -= int(term)
     return total
 
+#This is made into a function simply so that one can rerun the program from the shell by calling this function.
 def findx():
     expression = input("Enter an equation:")
     pattern = '[0-9]*x[0-9]*'
