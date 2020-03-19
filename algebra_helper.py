@@ -5,17 +5,17 @@ import re
 
 #creates two lists for each side of the equation containing all the terms and operands
 def createList(splitPart):
-    for i in range(len(splitPart) - 1):
-        if splitPart[i] == "x":
-            splitPart[i] = "1x"
-
     for term in splitPart:
         if term == "":
             splitPart.remove(term)
-    
+
+    for i in range(len(splitPart)):
+        if splitPart[i] == "x":
+            splitPart[i] = "1x"    
+
     #if the first term is not preceded by a minus it is automatically a positive term
     newList = [[splitPart[0], "+"]]
-    
+
     #adds each term to newList and appends the operator preceding the term
     count = 0
     for term in splitPart:
